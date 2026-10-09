@@ -1,17 +1,23 @@
 # affichage d'un répertoire dans une fenêtre tkinter
 # Antoine Jaccard
+# Librairies importées: plattform, socket, psutil, getpass
 
-import tkinter
 import tkinter as tk
 from tkinter import ttk # pour le treeview
 from tkinter import filedialog # boite dialogue pour chercher un répertoire
 from pathlib import Path # fonctions de répertoire
 from datetime import datetime
 import os
+import platform
+import socket
+import psutil
+import getpass
+
 
 node_paths = {} #garder les chemins complets
 
 # afficher des détails sur un fihcier
+
 
 def display_file_info(event):
     global txt_name, txt_permissions, txt_modified, txt_size, txt_type, tkt_path
@@ -39,11 +45,6 @@ def display_file_info(event):
     else:
         txt_permissions.insert("1.0", "Read Only")
 
-
-    print("Fichier:", file_path)
-    print("Taille:", file_info.st_size, "octets")
-    print("Date:", datetime.fromtimestamp(file_info.st_mtime))
-    print("Type:", file_path.suffix or "sans extension")
 
 
 # afficher un répertoire
@@ -75,6 +76,23 @@ def populate_tree(tree, parent, folder):
             # cas d'un répertoire, rappeler les enfants de l'enfant (peut être long)
             populate_tree(tree,node,item)
 
+
+def get_ip(): # foction générée par IA
+    s=socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    try:
+        s.connect(("8.8.8.8", 80))
+        ip=s.getsockname()[0]
+    finally:
+        s.close()
+    return ip
+def update_pc_info():
+    global txt_cpu_used, txt_disk, txt_ram
+    txt_cpu_used.delete("1.0",tk.END)
+    txt_cpu_used.insert("1.0", f"{psutil.cpu_percent(interval=1)}%")
+    txt_ram.delete("1.0", tk.END)
+    txt_ram.insert("1.0", f"{psutil.virtual_memory().percent}%")
+    txt_disk.delete("1.0", tk.END)
+    txt_disk.insert("1.0",f"{psutil.disk_usage('/').percent}%")
 # Fenêtre principale appelée window
 window = tk.Tk()
 window.title("File Explorer Antoine Jaccard")
@@ -117,7 +135,7 @@ tree.grid(row=0, column=0, sticky="nsew") # placement, s'étire partout
 
 # Quand on sélectionne un fichier, on appelle display_file_info
 tree.bind("<<TreeviewSelect>>", display_file_info) 
-#création de la frame de détails
+# création de la frame de détails
 details_frame = tk.Frame(window, bg="lightblue")
 details_frame.grid(row=0, column=1, sticky="nsew")
 details_frame.columnconfigure(0,weight=1)
@@ -147,13 +165,78 @@ lbl_permissions.grid(row=10,column=0, sticky="ew")
 txt_permissions=tk.Text(details_frame, height=1)
 txt_permissions.grid(row=11, column=0, sticky="ew")
 
-#création de la frame de personnalisation
+# création de la frame de personnalisation
 
-perso_frame=tk.Frame(window)
+perso_frame=tk.Frame(window, bg="Lightblue")
 perso_frame.grid(row=0, column=2, sticky="nsew")
 perso_frame.columnconfigure(0, weight=1)
-perso_frame.rowconfigure(0, weight=1)
-lbl_test=tk.Label(perso_frame, text="test")
-lbl_test.pack()
+# création des widgets d'informations dur l'ordinateur
+lbl_information=tk.Label(perso_frame, text="Informations sur l'ordinateur")
+lbl_information.grid(row=0, column=0, sticky="new")
+lbl_user_name=tk.Label(perso_frame, text="Nom d'Utilisateur")
+lbl_user_name.grid(row=1, column=0, sticky="ew")
+txt_user_name=tk.Text(perso_frame, height=1)
+txt_user_name.grid(row=2, column=0, sticky="ew")
+lbl_computer_name = tk.Label(perso_frame, text="Nom de l'ordinateur")
+lbl_computer_name.grid(row=3, column=0, sticky="ew")
+txt_computer_name = tk.Text(perso_frame, height=1)
+txt_computer_name.grid(row=4, column=0, sticky="ew")
+lbl_ipconfig = tk.Label(perso_frame, text="Adresse IP")
+lbl_ipconfig.grid(row=5, column=0, sticky="ew")
+txt_ipconfig=tk.Text(perso_frame, height=1)
+txt_ipconfig.grid(row=6, column=0, sticky="ew")
+lbl_os = tk.Label(perso_frame, text="Système d'exploitation")
+lbl_os.grid(row=7, column=0, sticky="ew")
+txt_os = tk.Text(perso_frame, height=1)
+txt_os.grid(row=8, column=0, sticky="ew")
+lbl_os_version=tk.Label(perso_frame, text="Version du système d'exploitation")
+lbl_os_version.grid(row=9, column=0, sticky="ew")
+txt_os_version=tk.Text(perso_frame, height=1)
+txt_os_version.grid(row=10, column=0, sticky="ew")
+lbl_architecture=tk.Label(perso_frame, text="architechture")
+lbl_architecture.grid(row=11, column=0, sticky="ew")
+txt_architecture=tk.Text(perso_frame, height=1)
+txt_architecture.grid(row=12, column=0, sticky="ew")
+lbl_cpu = tk.Label(perso_frame, text="prosseceur")
+lbl_cpu.grid(row=13, column=0, sticky="ew")
+txt_cpu=tk.Text(perso_frame, height=2)
+txt_cpu.grid(row=14, column=0, sticky="ew")
+lbl_resources = tk.Label(perso_frame, text="utilisations des ressources")
+lbl_resources.grid(row=15, column=0, sticky="ew")
+lbl_cpu_used=tk.Label(perso_frame, text="utilisation du CPU")
+lbl_cpu_used.grid(row=16, column=0, sticky="ew")
+txt_cpu_used=tk.Text(perso_frame, height=1)
+txt_cpu_used.grid(row=17, column=0, sticky="ew")
+lbl_ram=tk.Label(perso_frame, text="Utilisation de la RAM")
+lbl_ram.grid(row=18, column=0, sticky="ew")
+txt_ram=tk.Text(perso_frame, height=1)
+txt_ram.grid(row=19, column=0, sticky="ew")
+lbl_disk=tk.Label(perso_frame,text="utilisation du disque")
+lbl_disk.grid(row=20, column=0, sticky="ew")
+txt_disk=tk.Text(perso_frame, height=1)
+txt_disk.grid(row=21, column=0, sticky="ew")
+btn_update_pc_info=tk.Button(perso_frame, text="mettre à jour l'utilisation des ressources", command=update_pc_info)
+btn_update_pc_info.grid(row=22, column=0, sticky="ew")
+# insertion des informations sur l'ordinateur utilisation de l'IA pour les librairies et les commandes autres que tkinter
+# nom d'utilisateur
+txt_user_name.insert("1.0",getpass.getuser())
+# nom de l'ordinateur
+txt_computer_name.insert("1.0", socket.gethostname())
+# adresse IP
+txt_ipconfig.insert("1.0", get_ip())
+# OS
+txt_os.insert("1.0", platform.system())
+# version de l'OS
+txt_os_version.insert("1.0", platform.release())
+# Architechture
+txt_architecture.insert("1.0", platform.architecture()[0])
+# processeur
+txt_cpu.insert("1.0", platform.processor())
+# utilisation du CPU
+txt_cpu_used.insert("1.0", f"{psutil.cpu_percent(interval=1)}%")
+# Utilisation de la RAM
+txt_ram.insert("1.0",f" {psutil.virtual_memory().percent} %")
+# utilisation du disque
+txt_disk.insert("1.0",f"{psutil.disk_usage('/').percent}%")
 # lancement du prog principal
 window.mainloop()
